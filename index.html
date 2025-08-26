@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dr.팜 – 라벨링 & 진단 데모</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body{background:linear-gradient(to bottom right,#f0fdf4,#ecfdf5);font-family:'Noto Sans KR',sans-serif}
+    .phone{width:380px;max-width:95vw;height:720px;max-height:88vh;border:8px solid #111;border-radius:46px;box-shadow:0 12px 35px rgba(0,0,0,.25);background:#fff;overflow:hidden;display:flex;flex-direction:column}
+    .tab-btn{flex:1 1 0%;padding:.65rem 0;border-bottom:2px solid transparent;font-weight:700;color:#64748b;transition:all .2s}
+    .tab-btn.active{color:#065f46;border-color:#22c55e;background:#f0fdf4}
+    .view{display:none;flex:1 1 auto;min-height:0}
+    .view.active{display:flex}
+    .screen{display:none;flex:1 1 auto;min-height:0}
+    .screen.active{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:24px}
+    .scrollable{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1 1 auto;min-height:0}
+
+    .plus-box{border:3px dashed #22c55e;width:200px;height:160px;border-radius:18px;display:grid;place-items:center;background:#f0fdf4;cursor:pointer;transition:all .2s;overflow:hidden}
+    .plus-box:hover{transform:scale(1.05);background:#dcfce7}
+    .plus-box img{max-width:100%;max-height:100%;object-fit:cover}
+    input[type="file"]{display:none}
+    .loader{display:flex;gap:18px}
+    .dot{width:20px;height:20px;border-radius:50%;background:#22c55e;animation:bounce .6s infinite alternate}
+    .dot:nth-child(2){animation-delay:.2s;background:#4ade80}
+    .dot:nth-child(3){animation-delay:.4s;background:#86efac}
+    @keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-14px)}}
+    .option-card{border:1px solid #e5e7eb;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:8px;background:#fafafa;cursor:pointer;transition:all .2s}
+    .option-card:hover{background:#f0fdf4}
+    .disabled{opacity:.4;pointer-events:none}
+    .card{border:1px solid #e5e7eb;border-radius:16px;padding:18px;background:#fafafa;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+    .chip{display:inline-block;padding:6px 12px;border-radius:9999px;font-size:13px;background:#ecfdf5;color:#065f46;font-weight:600;margin:2px}
+    .badge{display:inline-block;padding:6px 12px;border-radius:10px;font-size:13px;background:#22c55e;color:#fff;font-weight:700}
+  </style>
+</head>
+<body class="min-h-screen w-full grid place-items-center py-10">
+  <div class="phone">
+    <header class="w-full text-center py-5 bg-gradient-to-r from-green-600 to-emerald-500 text-white">
+      <h1 class="text-2xl font-bold">Dr.팜</h1>
+    </header>
+
+    <!-- 탭 바 -->
+    <nav class="flex">
+      <button id="tabLabel" class="tab-btn active">라벨링</button>
+      <button id="tabDiag" class="tab-btn">진단</button>
+    </nav>
+
+    <!-- ===== View 1: 라벨링 ===== -->
+    <main id="viewLabel" class="view active flex-col">
+      <!-- Step 1 -->
+      <section id="l-step1" class="screen active">
+        <label for="l-file" class="plus-box" id="l-previewBox">
+          <svg id="l-plusIcon" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </label>
+        <input id="l-file" type="file" accept="image/*" />
+        <p class="mt-3 text-green-700 font-medium">사진을 업로드 해주세요</p>
+
+        <select id="l-symptom" class="mt-4 w-56 border border-gray-300 rounded-lg p-2">
+          <option value="">증상을 선택해주세요</option>
+          <option value="탄저병">탄저병</option>
+          <option value="흰가루병">흰가루병</option>
+          <option value="잎마름병">잎마름병</option>
+          <option value="정상">정상(이상 없음)</option>
+        </select>
+
+        <button id="l-next" class="mt-5 px-5 py-2 rounded-lg bg-gray-300 text-gray-600 font-semibold disabled" disabled>다음</button>
+        <p class="mt-2 text-sm text-gray-500">* 사진 업로드와 증상 선택을 완료하면 다음 단계로 이동합니다.</p>
+      </section>
+      <!-- Step 2 -->
+      <section id="l-step2" class="screen">
+        <div class="loader"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <p class="mt-6 text-green-700 font-medium animate-pulse">제출 내용을 저장 중…</p>
+      </section>
+      <!-- Step 3 -->
+      <section id="l-step3" class="screen">
+        <div class="text-left w-full space-y-5">
+          <p class="text-lg font-semibold text-gray-800">제출 완료! 감사합니다 🙌</p>
+          <p class="text-sm text-gray-500">선택한 증상: <span id="l-chosen" class="font-semibold text-green-700">-</span></p>
+          <div>
+            <p class="font-medium mb-2">혜택을 선택해주세요</p>
+            <div class="space-y-2">
+              <label class="option-card"><input type="radio" name="l-reward" value="하나로마트 300p"> 하나로마트 300p</label>
+              <label class="option-card"><input type="radio" name="l-reward" value="농협카드 300p"> 농협카드 300p</label>
+              <label class="option-card"><input type="radio" name="l-reward" value="교환권 10000원"> 교환권 10000원</label>
+            </div>
+          </div>
+          <div class="p-4 bg-white rounded-lg border mt-1">
+            <p class="font-semibold text-gray-700">현재 누적</p>
+            <p class="text-2xl text-red-600 font-bold">5200p</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ===== View 2: 진단 ===== -->
+    <main id="viewDiag" class="view flex-col">
+      <!-- D Step 1 -->
+      <section id="d-step1" class="screen active">
+        <label for="d-file" class="plus-box" id="d-previewBox">
+          <svg id="d-plusIcon" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </label>
+        <input id="d-file" type="file" accept="image/*" />
+        <p class="mt-3 text-green-700 font-medium">사진을 업로드 하면 간단 진단을 보여줍니다</p>
+        <button id="d-go" class="mt-4 px-5 py-2 rounded-lg bg-green-600 text-white font-semibold disabled" disabled>진단 시작</button>
+      </section>
+      <!-- D Step 2 (loading) -->
+      <section id="d-step2" class="screen">
+        <div class="loader"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <p class="mt-6 text-green-700 font-medium animate-pulse">분석 중입니다…</p>
+      </section>
+      <!-- D Step 3 (result) -->
+      <section id="d-step3" class="screen">
+        <div class="scrollable px-6 py-5 space-y-5 text-[17px] leading-8 w-full">
+          <h2 class="text-2xl font-extrabold text-green-700">결과: 고추 탄저병 추정</h2>
+          <div>
+            <span class="chip">고온·다습에서 확산</span>
+            <span class="chip">잎·과실 함몰 반점</span>
+            <span class="chip">빗물 튐 전염</span>
+          </div>
+          <div class="card space-y-2">
+            <h3 class="font-semibold text-gray-800">관리 방법</h3>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>병든 부위 즉시 제거 및 포장 밖 폐기.</li>
+              <li>전정·배수 개선으로 잎 젖음 시간 최소화.</li>
+              <li>강우 전·후 등록 약제 적기 살포(교호 살포 권장).</li>
+            </ul>
+            <div><span class="badge">에이팜/오티바 – 농협에서 구매 가능</span></div>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mt-2 pb-6">
+            <div class="rounded-xl overflow-hidden shadow"><img src="images/pesticide1.jpg" alt="농약이미지1"/></div>
+            <div class="rounded-xl overflow-hidden shadow"><img src="images/pesticide2.jpg" alt="농약이미지2"/></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+  </div>
+
+  <script>
+    // 탭 전환
+    const tabLabel = document.getElementById('tabLabel');
+    const tabDiag = document.getElementById('tabDiag');
+    const viewLabel = document.getElementById('viewLabel');
+    const viewDiag = document.getElementById('viewDiag');
+    function switchTab(target){
+      [tabLabel,tabDiag].forEach(b=>b.classList.remove('active'));
+      [viewLabel,viewDiag].forEach(v=>v.classList.remove('active'));
+      if(target==='label'){ tabLabel.classList.add('active'); viewLabel.classList.add('active'); }
+      else { tabDiag.classList.add('active'); viewDiag.classList.add('active'); }
+    }
+    tabLabel.onclick=()=>switchTab('label');
+    tabDiag.onclick=()=>switchTab('diag');
+
+    // ===== 라벨링 로직 =====
+    const l_step1=document.getElementById('l-step1');
+    const l_step2=document.getElementById('l-step2');
+    const l_step3=document.getElementById('l-step3');
+    const l_file=document.getElementById('l-file');
+    const l_sym=document.getElementById('l-symptom');
+    const l_next=document.getElementById('l-next');
+    const l_chosen=document.getElementById('l-chosen');
+    const l_previewBox=document.getElementById('l-previewBox');
+    const l_plusIcon=document.getElementById('l-plusIcon');
+    let l_hasFile=false,l_hasSym=false;
+    function l_show(el){[l_step1,l_step2,l_step3].forEach(s=>s.classList.remove('active'));el.classList.add('active');}
+    function l_update(){ if(l_hasFile&&l_hasSym){ l_next.disabled=false; l_next.classList.remove('disabled','bg-gray-300','text-gray-600'); l_next.classList.add('bg-green-600','text-white'); } else { l_next.disabled=true; l_next.classList.add('disabled','bg-gray-300','text-gray-600'); l_next.classList.remove('bg-green-600','text-white'); } }
+    l_file.addEventListener('change',()=>{ if(l_file.files&&l_file.files[0]){ l_hasFile=true; const r=new FileReader(); r.onload=e=>{l_previewBox.innerHTML=`<img src="${e.target.result}" alt="업로드 미리보기"/>`;}; r.readAsDataURL(l_file.files[0]); } else { l_hasFile=false; l_previewBox.innerHTML=l_plusIcon.outerHTML; } l_update(); });
+    l_sym.addEventListener('change',()=>{ l_hasSym=!!l_sym.value; l_update(); });
+    l_next.addEventListener('click',()=>{ if(!(l_hasFile&&l_hasSym))return; l_chosen.textContent=l_sym.value; l_show(l_step2); setTimeout(()=>l_show(l_step3),800); });
+
+    // ===== 진단 로직(데모용) =====
+    const d_step1=document.getElementById('d-step1');
+    const d_step2=document.getElementById('d-step2');
+    const d_step3=document.getElementById('d-step3');
+    const d_file=document.getElementById('d-file');
+    const d_go=document.getElementById('d-go');
+    const d_previewBox=document.getElementById('d-previewBox');
+    const d_plusIcon=document.getElementById('d-plusIcon');
+    let d_hasFile=false;
+    function d_show(el){[d_step1,d_step2,d_step3].forEach(s=>s.classList.remove('active'));el.classList.add('active');}
+    d_file.addEventListener('change',()=>{ if(d_file.files&&d_file.files[0]){ d_hasFile=true; const r=new FileReader(); r.onload=e=>{d_previewBox.innerHTML=`<img src="${e.target.result}" alt="업로드 미리보기"/>`;}; r.readAsDataURL(d_file.files[0]); d_go.disabled=false; d_go.classList.remove('disabled'); } else { d_hasFile=false; d_previewBox.innerHTML=d_plusIcon.outerHTML; d_go.disabled=true; }
+    });
+    d_go.addEventListener('click',()=>{ if(!d_hasFile) return; d_show(d_step2); setTimeout(()=>d_show(d_step3),1200); });
+  </script>
+</body>
+</html>
